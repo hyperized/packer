@@ -38,7 +38,6 @@ type FlatConfig struct {
 	ClientToken           *string                           `mapstructure:"client_token" cty:"client_token" hcl:"client_token"`
 	Description           *string                           `mapstructure:"description" cty:"description" hcl:"description"`
 	DiskImageFormat       *string                           `mapstructure:"disk_image_format" required:"true" cty:"disk_image_format" hcl:"disk_image_format"`
-	DryRun                *bool                             `mapstructure:"dry_run" cty:"dry_run" hcl:"dry_run"`
 	ImageId               *string                           `mapstructure:"image_id" required:"true" cty:"image_id" hcl:"image_id"`
 	RoleName              *string                           `mapstructure:"role_name" cty:"role_name" hcl:"role_name"`
 	S3Bucket              *string                           `mapstructure:"s3_bucket_name" required:"true" cty:"s3_bucket_name" hcl:"s3_bucket_name"`
@@ -85,7 +84,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"client_token":                  &hcldec.AttrSpec{Name: "client_token", Type: cty.String, Required: false},
 		"description":                   &hcldec.AttrSpec{Name: "description", Type: cty.String, Required: false},
 		"disk_image_format":             &hcldec.AttrSpec{Name: "disk_image_format", Type: cty.String, Required: false},
-		"dry_run":                       &hcldec.AttrSpec{Name: "dry_run", Type: cty.Bool, Required: false},
 		"image_id":                      &hcldec.AttrSpec{Name: "image_id", Type: cty.String, Required: false},
 		"role_name":                     &hcldec.AttrSpec{Name: "role_name", Type: cty.String, Required: false},
 		"s3_bucket_name":                &hcldec.AttrSpec{Name: "s3_bucket_name", Type: cty.String, Required: false},

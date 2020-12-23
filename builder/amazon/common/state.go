@@ -201,6 +201,18 @@ func (w *AWSPollingConfig) WaitUntilImageImported(ctx aws.Context, conn *ec2.EC2
 	return err
 }
 
+func (w *AWSPollingConfig) WaitUntilImageExported(ctx aws.Context, conn *ec2.EC2, TaskId *string) error {
+	exportInput := ec2.DescribeExportImageTasksInput{
+		ExportImageTaskIds: []*string{TaskId},
+	}
+
+	return WaitForImageToBeExported(conn,
+		ctx,
+		&exportInput,
+		w.getWaiterOptions()...
+	)
+}
+
 // Custom waiters using AWS's request.Waiter
 
 func WaitForVolumeToBeAttached(c *ec2.EC2, ctx aws.Context, input *ec2.DescribeVolumesInput, opts ...request.WaiterOption) error {
@@ -292,6 +304,43 @@ func WaitForImageToBeImported(c *ec2.EC2, ctx aws.Context, input *ec2.DescribeIm
 				inCpy = &tmp
 			}
 			req, _ := c.DescribeImportImageTasksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+	w.ApplyOptions(opts...)
+
+	return w.WaitWithContext(ctx)
+}
+
+func WaitForImageToBeExported(c *ec2.EC2, ctx aws.Context, input *ec2.DescribeExportImageTasksInput, opts ...request.WaiterOption) error {
+	w := request.Waiter{
+		Name:        "DescribeImages",
+		MaxAttempts: 720,
+		Delay:       request.ConstantWaiterDelay(5 * time.Second),
+		Acceptors: []request.WaiterAcceptor{
+			{
+				State:    request.SuccessWaiterState,
+				Matcher:  request.PathAllWaiterMatch,
+				Argument: "ExportImageTasks[].Status",
+				Expected: "completed",
+			},
+			{
+				State:    request.FailureWaiterState,
+				Matcher:  request.PathAnyWaiterMatch,
+				Argument: "ExportImageTasks[].Status",
+				Expected: "deleted",
+			},
+		},
+		Logger: c.Config.Logger,
+		NewRequest: func(opts []request.Option) (*request.Request, error) {
+			var inCpy *ec2.DescribeExportImageTasksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeExportImageTasksRequest(inCpy)
 			req.SetContext(ctx)
 			req.ApplyOptions(opts...)
 			return req, nil
